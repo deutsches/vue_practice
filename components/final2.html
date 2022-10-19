@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>元件章節作業</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="images/favicon.ico" rel="shortcut icon">
+    <meta charset="UTF-8">
+    <script src="/javascripts/vendor.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.0.2/vue.global.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
+</head>
+
+<body class="bg-lighter">
+    <div class="container main my-5">
+        <div class="row">
+            <main class="col post">
+                <!-- 章節標題 -->
+                <div class="mb-4">
+                    <h1 class="mt-0 text-muted">元件章節作業</h1><small>檔名：<code>component_final.html</code></small></div>
+                <!-- 🔥🔥練習開始🔥🔥 -->
+                <div id="app">
+                    <h3>作業條件：</h3>
+                    <ol>
+                        <li>將以下範例改為 Vue 的版本</li>
+                        <li>卡片、分頁要製作成 “元件”</li>
+                        <li>分頁要善用 props 及 emits 的觀念</li>
+                    </ol>
+
+                    <!-- <div class="row" id="content">
+                    </div> -->
+
+                    <div class="row">
+                        <card :data="pageData"></card>
+                    </div>
+
+
+
+
+
+
+                    <div class="d-flex justify-content-center mt-4">
+                        <nav aria-label="Page navigation example">
+                            <ul class="pagination" id="pageid">
+                                <page :pagetotal="pageTotal" :currentpage="currentPage" @emit-previous="previousPage" @emit-next="nextPage" @emit="otherPage">
+
+                                </page>
+
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+
+                <style>
+                    .img-cover {
+                        object-fit: cover;
+                        height: 155px;
+                    }
+                </style>
+
+                <script>
+                    const App = Vue.createApp({
+                        data() {
+                            return {
+                                dataStore: [],
+                                pageData: [],
+                                pageTotal: 0,
+                                currentPage: 1,
+
+                            }
+                        },
+                        methods: {
+                            getData() {
+                                const apiUrl = 'https://api.kcg.gov.tw/api/service/Get/9c8e1450-e833-499c-8320-29b36b7ace5c';
+                                axios.get(apiUrl).then(res => {
+                                    //console.log(res.data.data.XML_Head.Infos.Info);
+                                    this.dataStore = res.data.data.XML_Head.Infos.Info;
+
+                                    this.pagination(1);
+                                    console.log(this.dataStore);
+                                });
+
+
+                            },
+                            pagination(nowPage) {
+                                const dataTotal = this.dataStore.length;
+                                const perpage = 30;
+                                this.pageTotal = Math.ceil(dataTotal / perpage);
+
+                                let currentPage = nowPage;
+                                if (currentPage > this.pageTotal) {
+                                    currentPage = this.pageTotal;
+                                }
+                                const minData = (currentPage * perpage) - perpage + 1;
+                                const maxData = (currentPage * perpage);
+                                this.pageData = [];
+                                this.dataStore.forEach((element, index) => {
+
+                                    if (index >= minData && index <= maxData) {
+                                        this.pageData.push(element);
+                                    }
+                                });
+                            },
+                            previousPage() {
+                                if (this.currentPage === 1) {
+
+                                } else {
+                                    this.currentPage -= 1;
+                                }
+                                this.pagination(this.currentPage);
+                            },
+                            nextPage() {
+                                if (this.currentPage === pageTotal) {
+
+                                } else {
+                                    this.currentPage += 1;
+                                }
+                                this.pagination(this.currentPage);
+                            },
+                            otherPage(page) {
+                                this.currentPage = page;
+                                this.pagination(page);
+                            }
+
+                        },
+                        created() {
+                            this.getData();
+
+                        },
+
+                    });
+                    App.component('card', {
+                        props: ['data'],
+
+                        template: `
+                            <div class="col-md-6 py-2" v-for="(view,index) in data" :key="index">
+                                <div class="card">
+                                    <div class="card bg-dark text-white text-left">
+                                        <img class="card-img-top img-cover" height="155px" :src="view.Picture1">
+                                        <div class="card-img-overlay d-flex justify-content-between align-items-end p-0 px-3" style="background-color: rgba(0, 0, 0, .2)">
+                                            <h5 class="card-img-title-lg">{{view.Name}}</h5>
+                                            <h5 class="card-img-title-sm">{{view.Zone}}</h5>
+
+                                    </div>
+                                </div>
+                                <div class="card-body text-left">
+                                    <p class="card-text"><i class="far fa-clock fa-clock-time"></i>&nbsp;{{view.Opentime}}</p>
+                                    <p class="card-text"><i class="fas fa-map-marker-alt fa-map-gps"></i>&nbsp;{{view.Add}}</p>
+                                    <p class="card-text"><i class="fas fa-mobile-alt fa-mobile"></i>&nbsp;{{view.Tel}}</p>
+
+                                    <div v-if="view.Ticketinfo ?true: false">
+
+                                        <p class="card-text"><i class="fas fa-tags text-warning"></i>&nbsp;{{view.Ticketinfo}}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>`,
+                    });
+                    App.component('page', {
+                        props: ['pagetotal', "currentpage"],
+                        methods: {
+                            clickPage(page) {
+                                this.$emit('emit', page);
+                                console.log(typeof this.currentpage);
+                            },
+                            clickNext() {
+                                this.$emit('emit-next')
+                            },
+                            clickPrevious() {
+                                this.$emit('emit-previous')
+                            }
+                        },
+                        template: `
+                        <li class="page-item" :class='{"disabled":this.currentpage === 1}'><a class="page-link" href="#"  @click="clickPrevious">Previous</a></li>
+                        <li class="page-item" :class='{"active":this.currentpage === page}' v-for="(page,index) in pagetotal" :key="index"><a class="page-link" href="#" @click="clickPage(page)" >{{page}}</a></li>
+                        <li class="page-item" :class='{"disabled":this.currentpage === this.pagetotal}'><a class="page-link" href="#" @click="clickNext">Next</a></li>`
+                    });
+                    App.mount('#app');
+                </script>
+
+                <!-- 🙇🙇練習結束🙇🙇 -->
+            </main>
+
+            <aside class="col-md-3">
+                <div class="sticky-top" style="top: 76px">
+                    <div class="list-group">
+
+                        <a href="/components/component_register.html" class="list-group-item list-group-item-action
+        
+        ">
+      元件註冊
+    </a>
+
+                        <a href="/components/component_template.html" class="list-group-item list-group-item-action
+        
+        ">
+      元件樣板及綁定方式
+    </a>
+
+                        <a href="/components/component_props.html" class="list-group-item list-group-item-action
+        
+        ">
+      Props
+    </a>
+
+                        <a href="/components/component_props_type.html" class="list-group-item list-group-item-action
+        
+        ">
+      Props 型別與驗證
+    </a>
+
+                        <a href="/components/component_emits.html" class="list-group-item list-group-item-action
+        
+        ">
+      Emit 傳遞事件
+    </a>
+
+                        <a href="/components/component_emits_api.html" class="list-group-item list-group-item-action
+        
+        ">
+      Emits 驗證
+    </a>
+
+                        <a href="/components/component_slot.html" class="list-group-item list-group-item-action
+        
+        ">
+      元件插巢
+    </a>
+
+                        <a href="/components/component_slot_props.html" class="list-group-item list-group-item-action
+        
+        ">
+      元件插巢 Props
+    </a>
+
+                        <a href="/components/component_mitt.html" class="list-group-item list-group-item-action
+        
+        ">
+      跨元件溝通
+    </a>
+
+                        <a href="/components/component_final.html" class="list-group-item list-group-item-action
+        
+        active">
+      元件章節作業
+    </a>
+
+                    </div>
+                    <div class="mt-3 text-end p-2 bg-light rounded">
+                        <small class="text-black-50 fw-light mb-0">文件版本：2022/6/21</small>
+                    </div>
+                </div>
+
+            </aside>
+
+        </div>
+    </div>
+
+    <nav class="navbar fixed-top navbar-expand-sm navbar-dark bg-secondary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">Vue 3 練習手冊</a>
+            <div class="collapse navbar-collapse" id="navbarCollapse">
+                <ul class="navbar-nav">
+                    <li class="nav-item active">
+                        <a class="nav-link " href="/es6/shorthand.html">JS 必備觀念</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link " href="/intro/createApp.html">認識 Vue.js</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link " href="/template/v-text.html">模板</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link " href="/optionsApi/options-methods.html">方法</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/components/component_register.html">元件</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link " href="/advApi/adv-refs.html">進階</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link " href="/router/vue-router.html">路由</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link " href="/composition/proxy.html">Composition API</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <footer class="footer py-2 bg-light">
+        <div class="container text-center">
+            <small class="text-black-50 fw-light mb-0">六角學院 Vue 課程專屬文件</small>
+        </div>
+    </footer>
+    <link rel="stylesheet" href="/stylesheets/all.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+</body>
+
+</html>

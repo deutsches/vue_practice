@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>章節挑戰</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="images/favicon.ico" rel="shortcut icon">
+    <meta charset="UTF-8">
+    <script src="/javascripts/vendor.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/3.0.2/vue.global.js"></script>
+</head>
+
+<body class="bg-lighter">
+    <div class="container main my-5">
+        <div class="row">
+            <main class="col post">
+                <!-- 章節標題 -->
+                <div class="mb-4">
+                    <h1 class="mt-0 text-muted">章節挑戰</h1><small>檔名：<code>options-final.html</code></small></div>
+                <!-- 🔥🔥練習開始🔥🔥 -->
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js"></script>
+                <div id="app" class="mt-2">
+                    <div class="row h-100">
+                        <div class="col-md-3 h-100 d-flex flex-column">
+                            <div class="form-floating mb-2">
+                                <input type="text" class="form-control" id="search" placeholder="search" v-model="cacheSearch">
+                                <label for="search">search</label>
+                            </div>
+                            <div class="list-group option">
+                                <label class="list-group-item" v-for="view in searchDatas" :key="view.Id">
+              <input class="form-check-input me-1" type="radio" name="area" @click="clickView(view)"  :value="view.Name" v-model="cacheArea">
+              {{ view.Name }}
+            </label>
+                            </div>
+                        </div>
+                        <div class="col-md-8 h-100 d-flex flex-column">
+                            <div class="form-floating">
+                                <select id="cacheArea" class="form-select w-50 mb-2" aria-label="select example" v-model="cacheArea">
+              <option selected value="" disabled>瀏覽紀錄</option>
+              <option  v-for="(view,index) in browseLog" :key="index" :value="view.Name">{{index+1}}.{{view.Name}}</option>
+            </select>
+                                <label for="cacheArea">瀏覽紀錄</label>
+                            </div>
+                            <div v-if=" (JSON.stringify(selectedView) != '{}')? true:false">
+                                <div class="card overflow-auto">
+                                    <img :src="selectView.Picture1" class="card-img-top" :alt="selectView.Name">
+                                    <iframe width="100%" height="300" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" :src=`https://maps.google.com.tw/maps?f=q&hl=zh-TW&geocode=&q=${selectView.Py},${selectView.Px}(${selectView.Name})&z=16&output=embed`></iframe>
+                                    <div class="card-body">
+                                        <h5 class="card-title">{{ selectView.Name }}</h5>
+                                        <p>{{ selectView.Description }}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div v-else class="card-body">
+                                請選擇場域
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <script>
+                    const App = {
+                        data() {
+                            return {
+                                datastore: [],
+                                cacheArea: '',
+                                cacheSearch: '',
+                                browseLog: [],
+                                selectView: {},
+
+                            };
+                        },
+                        methods: {
+                            getData() {
+                                const apiUrl = 'https://raw.githubusercontent.com/hexschool/KCGTravel/master/datastore_search.json';
+
+                                axios.get(apiUrl).then((res) => {
+                                    // 取得遠端資料
+                                    this.datastore = res.data.result.records;
+                                })
+                            },
+                            clickView(view) {
+                                this.selectView = view;
+                                this.cacheArea = view.Name;
+                                if (this.browseLog.length >= 10) {
+                                    this.browseLog.shift();
+                                    this.browseLog.push(view);
+                                } else {
+                                    this.browseLog.push(view);
+                                }
+                                console.log(this.selectView);
+                                console.log(1);
+                            },
+
+
+                        },
+                        computed: {
+                            searchDatas() {
+                                return this.datastore.filter(item => {
+                                    return item.Name.match(this.cacheSearch);
+                                });
+                            },
+
+                        },
+                        watch: {
+                            cacheArea(n, o) {
+                                let a;
+                                a = this.datastore.filter(item => {
+                                    return item.Name.match(n);
+                                });
+
+                                this.selectView = a[0];
+                                console.log(this.selectView);
+                                console.log(2);
+                            }
+                        },
+                        created() {
+                            this.getData();
+                        }
+                    };
+
+                    Vue.createApp(App).mount('#app');
+                </script>
+
+                <style>
+                    #app {
+                        height: 600px;
+                    }
+                    
+                    .option {
+                        overflow-y: auto;
+                    }
+                </style>
+
+                <!-- 🙇🙇練習結束🙇🙇 -->
+            </main>
+
+            <aside class="col-md-3">
+                <div class="sticky-top" style="top: 76px">
+                    <div class="list-group">
+
+                        <a href="/optionsApi/options-api.html" class="list-group-item list-group-item-action
+            
+            ">
+          option API
+        </a>
+
+                        <a href="/optionsApi/options-methods.html" class="list-group-item list-group-item-action
+            
+            ">
+          Methods
+        </a>
+
+                        <a href="/optionsApi/options-computed.html" class="list-group-item list-group-item-action
+            
+            ">
+          Computed
+        </a>
+
+                        <a href="/optionsApi/options-watch.html" class="list-group-item list-group-item-action
+            
+            ">
+          Watch
+        </a>
+
+                        <a href="/optionsApi/options-life-cycle.html" class="list-group-item list-group-item-action
+            
+            ">
+          元件生命週期
+        </a>
+
+                        <a href="/optionsApi/options-final.html" class="list-group-item list-group-item-action
+            
+            active">
+          章節挑戰
+        </a>
+
+                    </div>
+                    <div class="mt-3 text-end p-2 bg-light rounded">
+                        <small class="text-black-50 fw-light mb-0">文件版本：2022/6/21</small>
+                    </div>
+                </div>
+
+            </aside>
+
+        </div>
+    </div>
+
+    <nav class="navbar fixed-top navbar-expand-sm navbar-dark bg-secondary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">Vue 3 練習手冊</a>
+            <div class="collapse navbar-collapse" id="navbarCollapse">
+                <ul class="navbar-nav">
+                    <li class="nav-item active">
+                        <a class="nav-link " href="/es6/shorthand.html">JS 必備觀念</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link " href="/intro/createApp.html">認識 Vue.js</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link " href="/template/v-text.html">模板</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/optionsApi/options-methods.html">方法</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link " href="/components/component_register.html">元件</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link " href="/advApi/adv-refs.html">進階</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link " href="/router/vue-router.html">路由</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link " href="/composition/proxy.html">Composition API</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <footer class="footer py-2 bg-light">
+        <div class="container text-center">
+            <small class="text-black-50 fw-light mb-0">六角學院 Vue 課程專屬文件</small>
+        </div>
+    </footer>
+    <link rel="stylesheet" href="/stylesheets/all.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+</body>
+
+</html>
