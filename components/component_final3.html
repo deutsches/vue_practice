@@ -17,7 +17,8 @@
             <main class="col post">
                 <!-- 章節標題 -->
                 <div class="mb-4">
-                    <h1 class="mt-0 text-muted">元件章節作業</h1><small>檔名：<code>component_final.html</code></small></div>
+                    <h1 class="mt-0 text-muted">元件章節作業</h1><small>檔名：<code>component_final.html</code></small>
+                </div>
                 <!-- 🔥🔥練習開始🔥🔥 -->
                 <div id="app">
                     <h3>作業條件：</h3>
@@ -27,28 +28,25 @@
                         <li>分頁要善用 props 及 emits 的觀念</li>
                     </ol>
 
-                    <!-- <div class="row" id="content">
-                    </div> -->
 
                     <div class="row">
-                        <card :data="pageData"></card>
+                        <card :view="item" v-for="(item,index) in singlePageData" :key="index">
+
+                        </card>
                     </div>
-
-
-
-
-
-
                     <div class="d-flex justify-content-center mt-4">
                         <nav aria-label="Page navigation example">
                             <ul class="pagination" id="pageid">
-                                <page :pagetotal="pageTotal" :currentpage="currentPage" @emit-previous="previousPage" @emit-next="nextPage" @emit="otherPage">
+                                <page :totalpage="totalPage" :nowpage="nowPage" @emit="otherPage" @page-next="nextPage" @page-previous="previousPage">
 
                                 </page>
 
                             </ul>
                         </nav>
                     </div>
+
+
+
                 </div>
 
                 <style>
@@ -63,77 +61,62 @@
                         data() {
                             return {
                                 dataStore: [],
-                                pageData: [],
-                                pageTotal: 0,
-                                currentPage: 1,
-
+                                singlePageData: [],
+                                totalPage: 0,
+                                nowPage: 0,
                             }
+
+
                         },
                         methods: {
                             getData() {
                                 const apiUrl = 'https://api.kcg.gov.tw/api/service/Get/9c8e1450-e833-499c-8320-29b36b7ace5c';
                                 axios.get(apiUrl).then(res => {
-                                    //console.log(res.data.data.XML_Head.Infos.Info);
                                     this.dataStore = res.data.data.XML_Head.Infos.Info;
-
                                     this.pagination(1);
-                                    console.log(this.dataStore);
-                                });
-
-
+                                })
                             },
-                            pagination(nowPage) {
-                                const dataTotal = this.dataStore.length;
-                                const perpage = 30;
-                                this.pageTotal = Math.ceil(dataTotal / perpage);
-
-                                let currentPage = nowPage;
-                                if (currentPage > this.pageTotal) {
-                                    currentPage = this.pageTotal;
-                                }
-                                const minData = (currentPage * perpage) - perpage + 1;
-                                const maxData = (currentPage * perpage);
-                                this.pageData = [];
+                            pagination(page) {
+                                const pageData = 20;
+                                const totalPage = Math.ceil(this.dataStore.length / pageData);
+                                const minData = (page - 1) * pageData;
+                                const maxData = page * pageData - 1;
+                                this.singlePageData = [];
                                 this.dataStore.forEach((element, index) => {
-
                                     if (index >= minData && index <= maxData) {
-                                        this.pageData.push(element);
+                                        this.singlePageData.push(element);
                                     }
-                                });
-                            },
-                            previousPage() {
-                                if (this.currentPage === 1) {
 
-                                } else {
-                                    this.currentPage -= 1;
-                                }
-                                this.pagination(this.currentPage);
+                                });
+                                this.nowPage = page;
+                                this.totalPage = totalPage;
+
+
                             },
                             nextPage() {
-                                if (this.currentPage === pageTotal) {
-
-                                } else {
-                                    this.currentPage += 1;
-                                }
-                                this.pagination(this.currentPage);
+                                this.nowPage += 1;
+                                this.pagination(this.nowPage);
+                            },
+                            previousPage() {
+                                this.nowPage -= 1;
+                                this.pagination(this.nowPage);
                             },
                             otherPage(page) {
-                                this.currentPage = page;
+                                this.nowPage = page;
+                                console.log(page);
                                 this.pagination(page);
-                            }
+                            },
 
                         },
                         created() {
                             this.getData();
-
                         },
-
                     });
-                    App.component('card', {
-                        props: ['data'],
 
+                    App.component('card', {
+                        props: ["view"],
                         template: `
-                            <div class="col-md-6 py-2" v-for="(view,index) in data" :key="index">
+                            <div class="col-md-6 py-2">
                                 <div class="card">
                                     <div class="card bg-dark text-white text-left">
                                         <img class="card-img-top img-cover" height="155px" :src="view.Picture1">
@@ -157,23 +140,27 @@
                         </div>`,
                     });
                     App.component('page', {
-                        props: ['pagetotal', "currentpage"],
+                        props: ['totalpage', 'nowpage'],
                         methods: {
                             clickPage(page) {
-                                this.$emit('emit', page);
-                                console.log(typeof this.currentpage);
+                                this.$emit('emit', page)
+
                             },
                             clickNext() {
-                                this.$emit('emit-next')
+                                this.$emit('page-next')
+
+
                             },
                             clickPrevious() {
-                                this.$emit('emit-previous')
-                            }
+                                this.$emit('page-previous')
+
+                            },
                         },
                         template: `
-                        <li class="page-item" :class='{"disabled":this.currentpage === 1}'><a class="page-link" href="#"  @click="clickPrevious">Previous</a></li>
-                        <li class="page-item" :class='{"active":this.currentpage === page}' v-for="(page,index) in pagetotal" :key="index"><a class="page-link" href="#" @click="clickPage(page)" >{{page}}</a></li>
-                        <li class="page-item" :class='{"disabled":this.currentpage === this.pagetotal}'><a class="page-link" href="#" @click="clickNext">Next</a></li>`
+                            <li  class="page-item" :class="{disabled:nowpage===1}"><a class="page-link" href="#" @click="clickPrevious">Previous</a></li>
+                            <li  class="page-item" :class='{"active":this.nowpage === page}' v-for="page in totalpage" :key="page"><a class="page-link" href="#" @click="clickPage(page)">{{page}}</a></li>
+                            <li  class="page-item" :class="{disabled:this.nowpage===this.totalpage}"><a class="page-link" href="#" @click="clickNext">Next</a></li>
+                        `
                     });
                     App.mount('#app');
                 </script>
